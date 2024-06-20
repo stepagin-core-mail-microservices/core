@@ -19,6 +19,7 @@ import java.util.List;
 @AllArgsConstructor
 public class UserService {
     private final UserRepository userRepository;
+    private final KafkaProducerService kafkaProducerService;
 
     public List<UserEntity> getAllUsers() {
         return userRepository.findAll();
@@ -36,42 +37,50 @@ public class UserService {
         }
         UserEntity userEntity = new UserEntity(registrationDto.getLogin(), registrationDto.getPassword());
         userEntity.setEmail(registrationDto.getEmail());
-        return createUser(userEntity);
+        return saveUser(userEntity);
     }
 
-    public UserDto createUser(UserEntity userEntity) {
-        return UserMapper.toDto(userRepository.save(userEntity));
+    public UserDto saveUser(UserEntity userEntity) {
+        UserEntity user = userRepository.save(userEntity);
+        kafkaProducerService.sendUser(user);
+        return UserMapper.toDto(userEntity);
     }
 
     public void blockUser(String login) {
-        UserEntity userEntity = userRepository.findByLogin(login);
-        if (userEntity == null) {
+        UserEntity user = userRepository.findByLogin(login);
+        if (user == null) {
             throw new UserNotFoundException(login);
         }
-        if (userEntity.isBlocked()) {
+        if (user.isBlocked()) {
             throw new NoChangesException("User already blocked");
         }
-        if (userEntity.getRoles().contains(Role.MODERATOR)) {
+        if (user.getRoles().contains(Role.MODERATOR)) {
             throw new IllegalActionException("Cannot block a moderator");
         }
         userRepository.blockById(login);
+        user.setBlocked(true);
+        kafkaProducerService.sendUser(user);
     }
 
     public void unblockUser(String login) {
-        UserEntity userEntity = userRepository.findByLogin(login);
-        if (userEntity == null) {
+        UserEntity user = userRepository.findByLogin(login);
+        if (user == null) {
             throw new UserNotFoundException(login);
         }
-        if (!userEntity.isBlocked()) {
+        if (!user.isBlocked()) {
             throw new NoChangesException("User already unblocked");
         }
         userRepository.unblockById(login);
+        user.setBlocked(false);
+        kafkaProducerService.sendUser(user);
     }
 
     public void updateEmail(UserEntity user, String email) {
         if (userRepository.existsByEmailIgnoreCase(email))
             throw new UserAlreadyExistsException("Email " + email + " is taken");
         userRepository.updateEmailByLogin(email, user.getLogin());
+        user.setEmail(email);
+        kafkaProducerService.sendUser(user);
     }
 
     public UserDto getUserByLogin(String login) {

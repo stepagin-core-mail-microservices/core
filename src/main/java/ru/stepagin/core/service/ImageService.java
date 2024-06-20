@@ -25,6 +25,7 @@ import java.util.UUID;
 @AllArgsConstructor
 public class ImageService {
     private final ImageRepository imageRepository;
+    private final KafkaProducerService kafkaProducerService;
 
     public List<ImageDto> saveImages(MultipartFile[] imgList, UserEntity userEntity) {
         List<ImageEntity> imageList = new ArrayList<>();
@@ -38,8 +39,9 @@ public class ImageService {
             }
             imageList.add(createEntity(file, userEntity));
         }
-
-        return ImageMapper.toDto(imageRepository.saveAll(imageList));
+        List<ImageEntity> savedImages = imageRepository.saveAll(imageList);
+        savedImages.forEach(kafkaProducerService::sendImage);
+        return ImageMapper.toDto(savedImages);
     }
 
     private ImageEntity createEntity(MultipartFile img, UserEntity owner) {
