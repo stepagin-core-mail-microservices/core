@@ -56,7 +56,7 @@ public class ImageController {
             Authentication auth
     ) {
         UserEntity user = securityService.getUserEntity(auth);
-        ImageEntity image = imageService.getImageEntity(uuid, user);
+        ImageEntity image = imageService.downloadImage(uuid, user);
         byte[] imageData = image.getBytes();
         String fileName = URLEncoder.encode(image.getName(), StandardCharsets.UTF_8);
 

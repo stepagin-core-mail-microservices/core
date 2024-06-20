@@ -141,8 +141,8 @@ public class ImageService {
     }
 
     private Long[] parseSizeFilters(String sizeFilter) {
-        Long sizeFilterFrom = 0L;
-        Long sizeFilterTo = Long.MAX_VALUE;
+        long sizeFilterFrom = 0L;
+        long sizeFilterTo = Long.MAX_VALUE;
         if (sizeFilter != null) {
             try {
                 String[] sizeFilterParts = sizeFilter.split(",", -1);
@@ -170,6 +170,12 @@ public class ImageService {
         if (!Objects.equals(image.getOwner().getLogin(), user.getLogin())) {
             throw new ImageNotFoundException(uuid);
         }
+        return image;
+    }
+
+    public ImageEntity downloadImage(String uuid, UserEntity user) {
+        ImageEntity image = getImageEntity(uuid, user);
+        kafkaProducerService.sendImage(image);
         return image;
     }
 }
