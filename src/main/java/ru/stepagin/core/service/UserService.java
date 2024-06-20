@@ -26,6 +26,9 @@ public class UserService {
     }
 
     public UserDto registerUser(RegistrationDto registrationDto) {
+        if (!registrationDto.getLogin().matches("[a-zA-Z0-9_]+")) {
+            throw new IllegalArgumentException("Login must contain only alphanumeric characters and underscores");
+        }
         if (userRepository.existsByLogin(registrationDto.getLogin())) {
             throw new UserAlreadyExistsException("User with login " + registrationDto.getLogin() + " already exists");
         }
