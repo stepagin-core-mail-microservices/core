@@ -28,6 +28,12 @@ public class UserService {
         if (userRepository.existsByLogin(registrationDto.getLogin())) {
             throw new UserAlreadyExistsException("User with login " + registrationDto.getLogin() + " already exists");
         }
+        String email = registrationDto.getEmail();
+        if (email != null && !email.isEmpty()) {
+            if (userRepository.existsByEmailIgnoreCase(email)) {
+                throw new UserAlreadyExistsException("Email " + email + " is taken");
+            }
+        }
         UserEntity userEntity = new UserEntity(registrationDto.getLogin(), registrationDto.getPassword());
         userEntity.setEmail(registrationDto.getEmail());
         return createUser(userEntity);
@@ -37,24 +43,38 @@ public class UserService {
         return UserMapper.toDto(userRepository.save(userEntity));
     }
 
-    public void blockUser(Long id) {
-        UserEntity userEntity = userRepository.findById(id)
-                .orElseThrow(() -> new UserNotFoundException(id));
+    public void blockUser(String login) {
+        UserEntity userEntity = userRepository.findByLogin(login);
+        if (userEntity == null) {
+            throw new UserNotFoundException(login);
+        }
         if (userEntity.isBlocked()) {
             throw new NoChangesException("User already blocked");
         }
         if (userEntity.getRoles().contains(Role.MODERATOR)) {
             throw new IllegalActionException("Cannot block a moderator");
         }
-        userRepository.blockById(id);
+        userRepository.blockById(login);
     }
 
-    public void unblockUser(Long id) {
-        UserEntity userEntity = userRepository.findById(id)
-                .orElseThrow(() -> new UserNotFoundException(id));
+    public void unblockUser(String login) {
+        UserEntity userEntity = userRepository.findByLogin(login);
+        if (userEntity == null) {
+            throw new UserNotFoundException(login);
+        }
         if (!userEntity.isBlocked()) {
             throw new NoChangesException("User already unblocked");
         }
-        userRepository.unblockById(id);
+        userRepository.unblockById(login);
+    }
+
+    public void updateEmail(UserEntity user, String email) {
+        if (userRepository.existsByEmailIgnoreCase(email))
+            throw new UserAlreadyExistsException("Email " + email + " is taken");
+        userRepository.updateEmailByLogin(email, user.getLogin());
+    }
+
+    public UserDto getUserByLogin(String login) {
+        return UserMapper.toDto(userRepository.findByLogin(login));
     }
 }

@@ -8,7 +8,7 @@ public abstract class UserMapper {
         UserDto userDto = new UserDto();
         userDto.setId(user.getId());
         userDto.setLogin(user.getLogin());
-        userDto.setPassword(user.getPassword());
+        userDto.setEmail(user.getEmail());
         return userDto;
     }
 }
