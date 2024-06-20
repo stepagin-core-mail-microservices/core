@@ -51,6 +51,7 @@ public class SecurityConfiguration {
                     registry.requestMatchers("/swagger-ui.html").permitAll();
                     registry.requestMatchers("/swagger-ui/index.html").permitAll();
                     registry.requestMatchers("/h2-console/**").permitAll();
+                    registry.requestMatchers("/favicon.ico").permitAll();
                     registry.requestMatchers(baseUrl + "/auth/registration").permitAll();
 
                     registry.anyRequest().authenticated();
