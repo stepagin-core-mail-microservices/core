@@ -44,7 +44,7 @@ public class UserService {
             throw new NoChangesException("User already blocked");
         }
         if (userEntity.getRoles().contains(Role.MODERATOR)) {
-            throw new IllegalActionException("Can not block a moderator");
+            throw new IllegalActionException("Cannot block a moderator");
         }
         userRepository.blockById(id);
     }

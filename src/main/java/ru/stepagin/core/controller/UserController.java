@@ -22,14 +22,14 @@ public class UserController {
     }
 
     @PutMapping("/{id}/block")
-    @PreAuthorize("#securityService.isModerator(authentication)")
+    @PreAuthorize("@securityService.isModerator(authentication)")
     public ResponseEntity<Object> block(@PathVariable("id") Long id) {
         userService.blockUser(id);
         return ResponseEntity.noContent().build();
     }
 
     @PutMapping("/{id}/unblock")
-    @PreAuthorize("#securityService.isModerator(authentication)")
+    @PreAuthorize("@securityService.isModerator(authentication)")
     public ResponseEntity<Object> unblock(@PathVariable("id") Long id) {
         userService.unblockUser(id);
         return ResponseEntity.noContent().build();

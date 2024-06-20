@@ -17,9 +17,14 @@ public class SecurityService {
         return !user.isBlocked() && user.getRoles().contains(Role.MODERATOR);
     }
 
-    private UserEntity getUserEntity(Authentication authentication) {
+    public UserEntity getUserEntity(Authentication authentication) {
         UserDetails user = (UserDetails) authentication.getPrincipal();
         return userRepository.findByLogin(user.getUsername());
+    }
+
+    public boolean isBlocked(Authentication authentication) {
+        UserEntity user = getUserEntity(authentication);
+        return user.isBlocked();
     }
 
 
